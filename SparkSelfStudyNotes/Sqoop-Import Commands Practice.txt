@@ -1,0 +1,612 @@
+--->>>>>> I have around 300 tables in a database. I want to import all the tables from the database except the tables named Table298, Table 123, and Table299. How can I do this without having to import the tables one by one?
+This can be accomplished using the import-all-tables import command in Sqoop and by specifying the exclude-tables option with it as follows-
+
+sqoop import-all-tables --connect jdbc:mysql://localhost:3306/ --username training --password training --exclude-tables Table298, Table 123, Table 299
+
+
+
+
+SQL To Hadoop SQOOP
+
+1. import -> copy the data from RDBMS to HDFS
+2. export -> copy the data from HDFS to RDMS
+
+You should have :
+
+1. Hadoop 
+2. MySQL
+3. SQOOP
+
+We will use cloudera VM4:
+
+Syntax
+
+$ sqoop import <arguments>
+
+In HDFS
+
+Create a folder called SqoopData under /user/training
+
+start mysql its installed in VM4
+
+[training@localhost ~]$ mysql -u hadoop -p
+Enter password: hadoop
+
+$mysql -p
+Password is training
+
+show database
+
+create data ccdb;
+create data jlcdb;
+use jlcdb
+create table mycustomers(
+-> cid int primary
+-> cname char(10)
+-> email
+-> phone long
+-> city char(10) 
+);
+
+mysql> insert into mycustomers values (101,'sri','sri@jlc',111,'Blore');
+mysql> insert into mycustomers values (102,'vas','vas@jlc',222,'Blore');
+
+mysql> create table customers1 as select * from mycustomers where 1=2;
+
+mysql> create table customers2 as select * from mycustomers where 1=2;
+
+mysql> create table customers3 as select * from mycustomers where 1=2;
+
+mysql> create table customers4 as select * from mycustomers where 1=2;
+
+mysql> create table customers5 as select * from mycustomers where 1=2;
+
+$ sqoop version
+$ sqoop help import
+$
+$sqoop list-databases --connect jdbc:mysql://localhost:3306/ --username training --password training
+here port is optional
+As typing password is not recommendable
+$sqoop list-databases --connect jdbc:mysql://localhost:3306/ --username training --P
+
+Checking tables under jlcdb
+$sqoop list-tables --connect jdbc:mysql://localhost:3306/jlcdb --username training --P
+
+
+Create a file Lab1.txt with below content
+
+list-databases
+--connect
+jdbc:mysql//localhost:3306/
+--username
+training
+--password
+training
+
+$ sqoop --options-file Lab1.txt // this command wil pick the required option from file
+
+Create a file Lab2.txt with below content
+
+list-databases
+--connect
+jdbc:mysql//localhost:3306/
+--username
+training
+--P
+
+$ sqoop --options-file Lab2.txt // this command wil pick the required option from file
+
+
+Create a file Lab3.txt with below content
+
+list-tables
+--connect
+jdbc:mysql//localhost:3306/jlcdb
+--username
+training
+--P
+
+$ sqoop --options-file Lab3.txt // this command wil pick the required option from file
+
+Using sqoop command itself you can perform sql operation
+
+$sqoop eval --connect jdbc:mysql://localhost:3306/jlcdb --username training --P -e "select * from mycustomers"
+$sqoop eval --connect jdbc:mysql://localhost:3306/jlcdb --username training --P -e "insert into mycustomers values(105,'aa','aa@jlc',555,'Blore')"
+$sqoop eval --connect jdbc:mysql://localhost:3306/jlcdb --username training --P -e "update mycustomers set city='Delhi' where cid=105";
+
+Most important is Sqoop Import
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers 
+**** SqoopData is directory in HDFS also no need to create mycustomers it will be created automatically like output folder in hadoop
+**** Analyse hadoop prcessing after running above command
+**** Check data in HDFS
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1  
+
+**** here --m stands for number of mapper
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --m 1
+
+**** --append will create another output file in same folder , it is just used in command to use the existing folder
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --as-avrodatafile
+
+**** it will generate the output in avro format
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --columns cid,city,email
+
+**** for restricting columns use --columns
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --where "city='Blore'" 
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --where "cid > 103"
+
+**** restricting/filtering the rows use --where
+
+Free form of fetching using --query option and removing -- table
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --target-dir SqoopData/mycustomers1 --m 1 --append --query 'select city,count(*) from mycustomers where $CONDITIONS'
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --target-dir SqoopData/mycustomers1 --m 1 --append --query "select city,count(*) from mycustomers where \$CONDITIONS"
+
+Handling null values
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --null-string "---"
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --null-non-string "000"
+
+Controlling type mapping
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --null-non-string "000" --null-string "---" --map-column-java phone=long
+
+Compressed type
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --null-non-string "000" --null-string "---" --map-column-java phone=long --z
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --null-non-string "000" --null-string "---" --map-column-java phone=long
+
+-- direct (do research on this)
+
+Output Formatting Arguments
+
+$sqoop import --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers1 --m 1 --append --null-non-string "000" --null-string "---" --enclosed-by '\"' 
+
+Importing all tables
+
+$sqoop import-all-tables --direct --connect jdbc:mysql://localhost:3306/jlcdb --username training --password training  --m 1 --append  
+
+=================================== DVS -Vimlesh+shesh ==================================================
+[training@localhost ~]$ sqoop-list-databases  --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop
+[training@localhost ~]$ sqoop-list-databases  --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop -P
+Enter password: 
+
+cat sqoopOption.txt ============
+#Options files for sqoop-list-databases
+
+list-databases  
+
+--connect
+jdbc:mysql://localhost:3306/DVS_DB
+
+--username
+hadoop 
+
+--password
+hadoop
+
+sqoop-eval --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop -e "select * from DEPT"
+
+sqoop-eval --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop -query "select * from DEPT"
+
+Note: Make sure Target output folder must not exist and .java files created must not be exist
+
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table DEPT --target-dir SqoopData/dept --append --columns DEPTNO,DNAME --where "DEPTNO>20"
+
+========= Imported usng free form QUERY ======= -m, where $CONDITIONS, where col<=val and $CONDITIONS is required ==========
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept --query "select count(*) from dept where \$CONDITIONS"
+
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept --m 1 --append --query "select DEPTNO,DNAME,LOC from DEPT where \$CONDITIONS"
+
+
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept -m 1 --append --query 'select * from dept where $CONDITIONS'
+
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept -m 1 --append --query 'select * from dept where DEPTNO>20 and $CONDITIONS'
+
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept -m 1 --append --query 'select DEPTNO,DNAME,LOC from dept where DEPTNO>20 and $CONDITIONS'
+
+==
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS'
+
+============= Handling NULL Values  --null-string "HANDLING NULL" --null-non-string "00000" ======================
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING NULL" --null-non-string "00000"
+
+====== Imporitng Compress file use -z(zip) or --compress(zip) or compression-codec will reaturn part-m-NNNNN.gz=======
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING NULL" --null-non-string "00000" -z
+
+
+===== Controlling Type Mapping => --map-column-java sal=Long i.e Java Wrapper class or --map-column-hive sal=long i.e. Hive Type
+===========
+sqoop import --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING_NULL" --null-non-string "00000" --map-column-java sal=Long
+
+========= DIRETCT IMPORT=> mysql use built-in tool mysqldump for imports data on high performance, --direct instruct for this ================
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING_NULL" --null-non-string "00000" --map-column-java sal=Long
+
+========= OUTPUT FORMATION AGRUMENTS =================
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING_NULL" --null-non-string "00000" --enclosed-by '\"' --fields-terminated-by '\t' --lines-terminated-by '\n'
+
+Output=====
+"7369"	"SMITH"	"CLERK"	"7902"	"1980-12-17"	"800.00"	"00000"	"20"
+"7499"	"ALLEN"	"SALESMAN"	"7698"	"1981-02-20"	"1600.00"	"300.00"	"30"
+"7521"	"WARD"	"SALESMAN"	"7698"	"1981-02-22"	"1250.00"	"500.00"	"30"
+
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING_NULL" --null-non-string "00000" --optionally-enclosed-by '\"' --fields-terminated-by '\t' --lines-terminated-by '\n'
+
+7369	SMITH	CLERK	7902	1980-12-17	800.00	00000	20
+7499	ALLEN	SALESMAN	7698	1981-02-20	1600.00	300.00	30
+
+
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/emp -m 1 --append --query 'select * from emp where $CONDITIONS' --null-string "HANDLING_NULL" --null-non-string "00000" --fields-terminated-by '\t' --lines-terminated-by '\n'
+
+Output=====
+7369	SMITH	CLERK	7902	1980-12-17	800.00	00000	20
+7499	ALLEN	SALESMAN	7698	1981-02-20	1600.00	300.00	30
+7521	WARD	SALESMAN	7698	1981-02-22	1250.00	500.00	30
+
+=============== Incremental imports ======
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept -m 1 --append --query 'select * from dept where deptno<=20 and $CONDITIONS' --fields-terminated-by '\t' --lines-terminated-by '\n'
+
+o/p==>
+adoop dfs -cat /user/training/SqoopData/dept/part-m-00005
+10	ACCOUNTING	NEW YORK
+20	RESEARCH	DALLAS
+
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept --table dept -m 1 --append --fields-terminated-by '\t' --lines-terminated-by '\n' --check-column deptno --incremental append --last-value 20
+
+o/p==>
+[training@localhost ~]$ hadoop dfs -cat /user/training/SqoopData/dept/part-m-00006
+30	SALES	CHICAGO
+40	OPERATIONS	BOSTON
+
+sqoop import --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --target-dir SqoopData/dept --table dept -m 1 --append --fields-terminated-by '\t' --lines-terminated-by '\n' --check-column deptno --incremental lastmodified 
+o/p==>
+[training@localhost ~]$ hadoop dfs -cat /user/training/SqoopData/dept/part-m-00007
+10	ACCOUNTING	NEW YORK
+20	RESEARCH	DALLAS
+30	SALES	CHICAGO
+40	OPERATIONS	BOSTON
+
+============= Import All Tables =====
+Conditions: 
+don't specify any where condition, Must have primary key in each table, create separate dir for each table, 
+Note: 	--target-dir not required
+		With respect to each table a .jar file will be created and output is store in separate directory
+		All Output directory must not be present
+sqoop import-all-tables --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop -m 1
+
+
+
+
+==================================== By SHESH =========================
+training@localhost ~]$ pwd
+/home/training
+[training@localhost ~]$ cd SqoopData/
+[training@localhost SqoopData]$ cat student.txt
+101	Shesh	bihar	11111
+102	Minku	bihar	22222
+103	Pinky	Jharkhand	33333
+104	Sarita	Jharkhand	44444
+105	Golu	Bihar	55555
+106	Devendra	Utharakhand	66666
+107	Shashi	UP	77777
+108	Sonal	Maharastra	88888
+109	Ganesh	Assam	99999
+[training@localhost SqoopData]$ hdfs dfs -ls
+[training@localhost SqoopData]$ hdfs dfs -mkdir Labs/SqoopLab
+[training@localhost SqoopData]$ hdfs dfs -ls
+Found 1 items
+drwxr-xr-x   - training supergroup          0 2018-02-15 06:12 Labs
+[training@localhost SqoopData]$ hdfs dfs -ls Labs
+Found 1 items
+drwxr-xr-x   - training supergroup          0 2018-02-15 06:12 Labs/SqoopLab
+[training@localhost SqoopData]$ hdfs dfs -ls Labs/SqoopLabs
+ls: `Labs/SqoopLabs': No such file or directory
+[training@localhost SqoopData]$ hdfs dfs -ls Labs/SqoopLab
+[training@localhost SqoopData]$ pwd
+/home/training/SqoopData
+[training@localhost SqoopData]$ hdfs dfs -put student.txt Labs/SqoopLab/
+[training@localhost SqoopData]$ hdfs dfs -ls Labs/SqoopLab
+Found 1 items
+-rw-r--r--   1 training supergroup        219 2018-02-15 06:15 Labs/SqoopLab/student.txt
+[training@localhost SqoopData]$ hdfs dfs -cat Labs/SqoopLab/student.txt
+101	Shesh	bihar	11111
+102	Minku	bihar	22222
+103	Pinky	Jharkhand	33333
+104	Sarita	Jharkhand	44444
+105	Golu	Bihar	55555
+106	Devendra	Utharakhand	66666
+107	Shashi	UP	77777
+108	Sonal	Maharastra	88888
+109	Ganesh	Assam	99999
+[training@localhost SqoopData]$ hdfs dfs -ls Labs/SqoopLab
+Found 1 items
+-rw-r--r--   1 training supergroup        219 2018-02-15 06:15 Labs/SqoopLab/student.txt
+[training@localhost SqoopData]$ 
+
+
+===================
+#Observe option -e and -query
+sqoop-eval --connect jdbc:mysql://localhost:3306 --username training --password training -e "create database kcdb"
+sqoop-eval --connect jdbc:mysql://localhost:3306 --username training --password training -query "create database sheshdb"
+
+[training@localhost SqoopData]$ sqoop-eval --connect jdbc:mysql://localhost:3306 --username training --password training -query "use kcdb"
+
+
+[training@localhost SqoopData]$ hdfs dfs -mkdir /user/training/SqoopData
+[training@localhost SqoopData]$ hdfs dfs -ls /user/training/SqoopData
+
+
+[training@localhost ~]$ mysql -p
+create table mycustomers (cid int primary key,cname char(10),email char(10),phone long,city char(10));
+
+create table customer1 as select * from mycustomers where 1=3;
+
+sqoop-eval --connect jdbc:mysql://localhost:3306/kcdb --username training --password training -query 'select * from mycustomers';
+
+sqoop-eval --connect jdbc:mysql://localhost:3306/kcdb --username training --password training -query "insert into mycustomers values(105,'Dirshti', 'drishti@kc.com', 55555, 'Arah')"
+
+sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers
+
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append
+
+[training@localhost ~]$ hdfs dfs -ls /user/training/SqoopData/mycustomers/
+
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --table mycustomers --append 
+
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --table mycustomers --append --columns cid,email,city
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00003
+101,sri,sri@kc,11111,Blore
+102,shesh,shesh@kc,22222,Blore
+103,Minku,Minku@kc,33333,Buxar
+104,Vimlesh,Vimlesh@kc,null,null
+105,Dirshti,drishti@kc.com,55555,Arah
+
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00004
+101,sri@kc,Blore
+102,shesh@kc,Blore
+103,Minku@kc,Buxar
+104,Vimlesh@kc,null
+105,drishti@kc.com,Arah
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --table mycustomers --append --where "city='Blore' "
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00005
+101,sri,sri@kc,11111,Blore
+102,shesh,shesh@kc,22222,Blore
+
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --table mycustomers --append --where "cid>=103 "
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00006
+103,Minku,Minku@kc,33333,Buxar
+104,Vimlesh,Vimlesh@kc,null,null
+105,Dirshti,drishti@kc.com,55555,Arah
+
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --target-dir SqoopData/mycustomers --m 1 --append --query "select cid, cname, city from mycustomers where \$CONDITIONS"
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --target-dir SqoopData/mycustomers --m 1 --append --query 'select cid, cname, city from mycustomers where $CONDITIONS'
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00007
+101,sri,Blore
+102,shesh,Blore
+103,Minku,Buxar
+104,Vimlesh,null
+105,Dirshti,Arah
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --target-dir SqoopData/mycustomers --m 1 --append --query 'select city, count(*) from mycustomers where $CONDITIONS group by city'
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00009
+null,1
+Arah,1
+Blore,2
+Buxar,1
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --null-string "------"
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00010
+101,sri,sri@kc,11111,Blore
+102,shesh,shesh@kc,22222,Blore
+103,Minku,Minku@kc,33333,Buxar
+104,Vimlesh,Vimlesh@kc,------,------
+105,Dirshti,drishti@kc.com,55555,Arah
+
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --null-string "------" --null-non-string "00000"
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00011
+101,sri,sri@kc,11111,Blore
+102,shesh,shesh@kc,22222,Blore
+103,Minku,Minku@kc,33333,Buxar
+104,Vimlesh,Vimlesh@kc,------,------
+105,Dirshti,drishti@kc.com,55555,Arah
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --null-string "------" --null-non-string "00000" --map-column-java phone=Long
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00012
+101,sri,sri@kc,11111,Blore
+102,shesh,shesh@kc,22222,Blore
+103,Minku,Minku@kc,33333,Buxar
+104,Vimlesh,Vimlesh@kc,00000,------
+105,Dirshti,drishti@kc.com,55555,Arah
+
+[training@localhost ~]$ sqoop import --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --null-string "------" --z
+
+[training@localhost ~]$ hdfs dfs -ls /user/training/SqoopData/mycustomers/
+-rw-r--r--   1 training supergroup        120 2018-02-19 05:12 /user/training/SqoopData/mycustomers/part-m-00013.gz
+
+
+[training@localhost ~]$ sqoop import --direct -connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00014
+101,sri,sri@kc,11111,Blore
+102,shesh,shesh@kc,22222,Blore
+103,Minku,Minku@kc,33333,Buxar
+104,Vimlesh,Vimlesh@kc,NULL,NULL
+105,Dirshti,drishti@kc.com,55555,Arah
+
+
+[training@localhost ~]$ sqoop import --direct -connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --enclosed-by '\"' --fields-terminated-by '\t' --lines-terminated-by '\n'
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00015
+"101"	"sri"	"sri@kc"	"11111"	"Blore"
+"102"	"shesh"	"shesh@kc"	"22222"	"Blore"
+"103"	"Minku"	"Minku@kc"	"33333"	"Buxar"
+"104"	"Vimlesh"	"Vimlesh@kc"	"NULL"	"NULL"
+"105"	"Dirshti"	"drishti@kc.com"	"55555"	"Arah"
+
+[training@localhost ~]$ sqoop import --direct -connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --optionally-enclosed-by '\"' --fields-terminated-by '\t' 
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00016
+101	sri	sri@kc	11111	Blore
+102	shesh	shesh@kc	22222	Blore
+103	Minku	Minku@kc	33333	Buxar
+104	Vimlesh	Vimlesh@kc	NULL	NULL
+105	Dirshti	drishti@kc.com	55555	Arah
+
+[training@localhost ~]$ sqoop import --direct -connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table mycustomers --target-dir SqoopData/mycustomers --m 1 --append --check-column cid --incremental append --last-value 103
+
+[training@localhost ~]$ hdfs dfs -cat /user/training/SqoopData/mycustomers/part-m-00017
+104,Vimlesh,Vimlesh@kc,NULL,NULL
+105,Dirshti,drishti@kc.com,55555,Arah
+
+
+mysql> show tables;
++----------------+
+| Tables_in_kcdb |
++----------------+
+| customer1      |
+| hello          |
+| mycustomers    |
++----------------+
+3 rows in set (0.01 sec)
+
+
+[training@localhost ~]$ sqoop import-all-tables -connect jdbc:mysql://localhost:3306/kcdb --username training --password training --m 1
+
+[training@localhost ~]$ hdfs dfs -ls /user/training/
+Found 4 items
+drwxr-xr-x   - training supergroup          0 2018-02-19 04:17 /user/training/SqoopData
+drwxr-xr-x   - training supergroup          0 2018-02-19 05:31 /user/training/_sqoop
+drwxr-xr-x   - training supergroup          0 2018-02-19 05:39 /user/training/hello
+drwxr-xr-x   - training supergroup          0 2018-02-19 05:39 /user/training/mycustomers
+
+
+[training@localhost ~]$ sqoop export --connect jdbc:mysql://localhost:3306/kcdb --username training --password training --table customer1 --export-dir SqoopData/mycustomers/part-m-00000
+
+
+
+
+========================== Interview Question =================
+
+-->>>>>> I have around 300 tables in a database. I want to import all the tables from the database except the tables named Table298, Table 123, and Table299. How can I do this without having to import the tables one by one?
+This can be accomplished using the import-all-tables import command in Sqoop and by specifying the exclude-tables option with it as follows-
+
+sqoop import-all-tables --connect jdbc:mysql://localhost:3306/ --username training --password training --exclude-tables Table298, Table 123, Table 299
+
+
+=====================================================================================
+Definition from Sqoop Documentation:
+–split-by Column of the table used to split work units. Cannot be used with --autoreset-to-one-mapper option.
+
+Additional Points:
+
+Column should be indexed
+If no index, each thread has to do full table scan
+If indexed, it will be search the index and find the data
+It should not have null values
+If null values there , sqoop ignore those values
+–split-by also can be used for NON-PK columns (for ex: order_status in orders table) . To split data on NON-PK columns, we should use additional property below:
+"-Dorg.apache.sqoop.splitter.allow_text_splitter=true"
+Disadvantage, with splitting on NON-PK column, sometimes system generates many files than expected.
+The below script will import “order_items_nopk” table’s into warehouse-dir using 4 files (default --num-mappers 4) which are into diff.file sizes (skewed) because there is no primary key on this table means, no index on column “order_item_order_id”. To avoid this --split-by can be used, so all data copied into 4 files with even sizes.
+
+sqoop import
+–connect jdbc:mysql://ms.itversity.com:3306/retail_db
+–username retail_user
+–password itversity
+–table order_items_nopk
+–warehouse-dir /user/vanampudi/sqoop_import/retail_db
+–split-by order_item_order_id
+
+Sqoop script ref to point # 6:
+sqoop import
+-Dorg.apache.sqoop.splitter.allow_text_splitter=true
+–connect jdbc:mysql://ms.itversity.com:3306/retail_db
+–username retail_user
+–password itversity
+–table orders
+–warehouse-dir /user/vanampudi/sqoop_import/retail_db
+–split-by order_status
+
+=====================================================================================
+Using Custom Boundary Queries
+Problem
+You found free-form query import to be very useful for your use case. Unfortunately, prior to starting any data transfer in MapReduce, Sqoop takes a long time to retrieve the minimum and maximum values of the column specified in the --split-by parameter that are needed for breaking the data into multiple independent tasks.
+
+Solution
+You can specify any valid query to fetch minimum and maximum values of the --split-by column using the --boundary-query parameter:
+
+sqoop import --connect jdbc:mysql://mysql.example.com/sqoop --username sqoop  --password sqoop 
+	--query 'SELECT normcities.id, countries.country, normcities.city 
+    FROM normcities JOIN countries USING(country_id)
+	WHERE $CONDITIONS' 
+	--split-by id
+	--target-dir cities
+	--boundary-query "select min(id), max(id) from normcities"
+
+=====================================================================================
+Renaming Sqoop Job Instances
+Problem
+You run several concurrent free-form query imports from various databases at the same time on your Hadoop cluster. All MapReduce jobs are named QueryResult.jar, so it’s very hard to see which MapReduce job belongs to which imported query.
+
+Solution
+You can use the command-line parameter --mapreduce-job-name to specify the name of the generated MapReduce job. This name will then show up in the JobTracker web UI. To name your job normcities, you would use the following command:
+
+sqoop import --connect jdbc:mysql://mysql.example.com/sqoop --username sqoop  --password sqoop 
+	--query 'SELECT normcities.id, countries.country, normcities.city 
+	FROM normcities 
+	JOIN countries USING(country_id)
+	WHERE $CONDITIONS'
+	--split-by id \
+	--target-dir cities \
+	--mapreduce-job-name normcities
+
+=====================================================================================
+
+Problem
+You have more than one table that you’re joining in your free-form query. Your Sqoop import is failing with an error message about duplicate columns, similar to the following one:
+
+Imported Failed: Duplicate Column identifier specified: 'id'
+
+Solution
+You might need to use SQL projection to rename columns in the query so that each column in the output result set has a unique name. You can do that using the AS syntax. For example, to import city names from the tables cities and normcities, you can use the following query:
+
+sqoop import --connect jdbc:mysql://mysql.example.com/sqoop --username sqoop  --password sqoop 
+	--query "SELECT cities.city AS first_city, normcities.city AS second_city
+	FROM cities
+	LEFT JOIN normcities USING(id)"
+
+=====================================================================================
+
+
+
+
+=====================================================================================

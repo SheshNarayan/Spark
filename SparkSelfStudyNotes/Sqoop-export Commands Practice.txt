@@ -1,0 +1,59 @@
+Target table must exist in the Databse.
+
+create table myemp as select * from emp where 1=2;
+create table mydept as select * from dept where deptno>=90;
+
+sqoop export --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table mydept --export-dir /user/training/DEPT/part-m-00000
+
+sqoop export --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table myemp --export-dir /user/training/emp/part-m-00000 -m 1
+Note: -m <n> can control number of partition file like part-m-00000 to part-m-00005 then -m 5 will work
+
+Output=> Verify the output as: 
+[training@localhost ~]$ hadoop dfs -cat /user/training/emp/part-m-00000
+mysql> select * from myemp;
+
+
+sqoop export --direct --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table myemp --export-dir /user/training/emp/part-m-00000 -m 1
+Note: It will use mysqlimport tool for fast exporting.
+
+========== Staging...
+mysql> truncate table myemp;
+
+creating staging table same as myemp;
+mysql> create table myemp_staging_tbl as select * from myemp where 1=2;
+
+=== Exporting data using staging table... 
+-->staging table export data in single transaction cant use --direct and --update-key
+
+sqoop export --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table myemp --export-dir /user/training/emp/part-m-00000 --staging-table myemp_staging_tbl
+mysql> select * from  myemp_staging_tbl;
+mysql> select * from  myemp;
+
+19/12/26 23:15:51 INFO mapreduce.ExportJobBase: Transferred 2.3857 KB in 26.7214 seconds (91.4248 bytes/sec)
+19/12/26 23:15:51 INFO mapreduce.ExportJobBase: Exported 14 records.
+19/12/26 23:15:51 INFO mapreduce.ExportJobBase: Starting to migrate data from staging table to destination.
+19/12/26 23:15:51 INFO manager.SqlManager: Migrated 14 records from myemp_staging_tbl to myemp
+
+sqoop export --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table myemp --export-dir /user/training/emp/part-m-00000 --staging-table myemp_staging_tbl --input-enclosed-by '\"' --input-fields-terminated-by ',' --input-lines-terminated-by '\n'
+
+
+sqoop export --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table myemp --export-dir /user/training/emp/part-m-00000 --staging-table myemp_staging_tbl --input-enclosed-by '\"' --input-fields-terminated-by ',' --input-lines-terminated-by '\n'
+Note: if you are  --input-enclosed-by '\"'  ==> Fields must enclosed in " like "7369","SMITH" etc.
+
+
+sqoop export --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --table myemp --export-dir /user/training/emp/part-m-00000 --staging-table myemp_staging_tbl --input-optionally-enclosed-by '\"' --input-fields-terminated-by ',' --input-lines-terminated-by '\n'
+Note: if you are  --input-optionally-enclosed-by '\"'  ==> Fields may or may not be enclosed in " like "7369","SMITH" etc.
+
+==================================================================
+SQOOP JOBS
+==================================================================
+sqoop job --create ListDBJob --list-databases --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop
+
+
+
+
+
+
+
+
+

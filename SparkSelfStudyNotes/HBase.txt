@@ -1,0 +1,29 @@
+
+Hive to HBase ......
+=====================
+CREATE EXTERNAL TABLE emp(id int, city string, name string, occupation string, salary int) 
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key,
+                   personal_data:city,
+                   personal_data:name,
+                   professional_data:occupation,
+                   professional_data:salary")
+TBLPROPERTIES ("hbase.table.name" = "emp", "hbase.mapred.output.outputtable" = "emp");
+
+=========== Another way Hive to HBase Link =====================
+CREATE EXTERNAL TABLE employee(
+  id string COMMENT 'from deserializer',
+  first_name string COMMENT 'from deserializer',
+  last_name string COMMENT 'from deserializer',
+  email string COMMENT 'from deserializer')
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.hbase.HBaseSerDe'
+STORED BY
+  'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES (
+  'hbase.columns.mapping'=':key,emp_details:first_name,emp_details:last_name,emp_details:email',
+  'serialization.format'='1')
+TBLPROPERTIES (
+  'hbase.table.name'='employee',"hbase.mapred.output.outputtable" = "emp") ;
+
+=====================================================================
