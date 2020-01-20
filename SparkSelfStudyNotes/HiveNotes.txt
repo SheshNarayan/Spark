@@ -1,6 +1,224 @@
 TMP and TEMP
 %USERPROFILE%\AppData\Local\Temp
 
+SelfNotes
+========================================================================================================================================
+
+=============================
+Create Database Statement - Create Database is a statement used to create a database in Hive. A database in Hive is a namespace or a collection of tables. 
+=============================
+Hive contains a default database named default.
+CREATE DATABASE|SCHEMA [IF NOT EXISTS] <database name>
+
+hive> CREATE DATABASE [IF NOT EXISTS] userdb;
+hive> CREATE SCHEMA userdb;
+
+hive> SHOW DATABASES;
+default
+userdb
+
+---
+import java.sql.SQLException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.DriverManager;
+
+public class HiveCreateDb {
+   private static String driverName = "org.apache.hadoop.hive.jdbc.HiveDriver";
+   
+   public static void main(String[] args) throws SQLException {
+		// Register driver and create driver instance
+		Class.forName(driverName);
+   
+		// get connection      
+		Connection con = DriverManager.getConnection("jdbc:hive://localhost:10000/default", "", "");
+
+		//	Create statement
+		Statement stmt = con.createStatement();
+      
+		// Execute Query
+		stmt.executeQuery("CREATE DATABASE userdb");
+		System.out.println(“Database userdb created successfully.”);
+      
+		//Close the connection
+		con.close();
+   }
+}
+
+=============================
+Drop Database Statement - Drop Database is a statement that drops all the tables and deletes the database.
+=============================
+DROP DATABASE StatementDROP (DATABASE|SCHEMA) [IF EXISTS] database_name  [RESTRICT|CASCADE];
+-> Drops the database using CASCADE means dropping respective tables before dropping the database.
+
+hive> DROP DATABASE IF EXISTS userdb CASCADE;
+hive> DROP SCHEMA userdb;
+
+// JDBC Execute Query Statement
+stmt.executeQuery("DROP DATABASE userdb"); 
+
+=============================
+Create Table Statement - Create Table is a statement used to create a table in Hive
+=============================
+CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.] table_name
+[(col_name data_type [COMMENT col_comment], ...)]
+[COMMENT table_comment]
+[ROW FORMAT row_format]
+[STORED AS file_format]
+
+hive> CREATE TABLE IF NOT EXISTS employee ( eid int, name String,
+salary String, destination String)
+COMMENT ‘Employee details’
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ‘\t’
+LINES TERMINATED BY ‘\n’
+STORED AS TEXTFILE;
+
+// JDBC Execute Query Statement
+      stmt.executeQuery("CREATE TABLE IF NOT EXISTS "
+         +" employee ( eid int, name String, salary String, destignation String) "
+         +" COMMENT ‘Employee details’"
+         +" ROW FORMAT DELIMITED"
+         +" FIELDS TERMINATED BY ‘\t’"
+         +" LINES TERMINATED BY ‘\n’"
+         +" STORED AS TEXTFILE;");
+
+Complex Data Types
+
+arrays:   ARRAY<data_type>
+maps:     MAP<primitive_type, data_type>
+structs:  STRUCT<col_name : data_type [COMMENT col_comment], …>
+
+==========
+= ARRAY: =
+==========
+Dataset_Temperature
+1/2/17	Karnataka	23.2,22.3,20.5,25.5,24.5,20.3
+1/2/17	Maharastra	25.2,23.3,22.5,24.5,24.5,26.3
+1/2/17 	Jharkhand	25.2,23.3,20.5,22.5,23.5,20.3
+
+hive> create table Temperature(date string,city string,MyTemp ARRAY<DOUBLE>) row format delimited fields terminated by ‘\t’ COLLECTION ITEMS TERMINATED BY ‘,’;
+
+hive> describe Temperature
+OK
+date  string
+city  string
+mytemp  array<double>
+
+hive> select * from Temperature
+1/2/17	Karnataka [23.2,22.3,20.5,25.5,24.5,20.3]
+1/2/17  Maharastra  [25.2,23.3,22.5,24.5,24.5,26.3]
+1/2/17 	Jharkhand [25.2,23.3,20.5,22.5,23.5,20.3]
+
+To select a column and a value from the table we can use the below command. - use index 0 to N-1
+select city,MyTemp[0] from Temperature;
+Karnataka	23.2
+Maharastra	25.2
+Jharkhand	25.2
+
+=========
+== Map ==
+=========
+
+SecondarySchool	Assam	Male	2015:56897,2016:575757,2017:585858
+SecondarySchool	Assam	fEMale	2015:19947,2016:20287,2017:33552
+
+Map is a collection of key-value pairs where fields are accessed using array notation of keys Eg: [‘Key’]
+hive> create table MySchools(schooltype string,state string,gender string, TOTAL MAP<INT,INT>) row format delimited fields terminated by ‘\t’ COLLECTION ITEMS TERMINATED BY ‘,’ MAP KEYS TERMINATED BY ‘:’;
+
+hive> describe MySchools;
+OK
+schooltype  string
+state       string
+gender      string
+TOTAL       MAP<INT,INT>
+
+hive> load data local inpath ‘/home/acadgild/Desktop/School_Data.txt’ into table MySchools;
+hive>  select * from MySchools;
+
+
+
+=============================		 
+Load Data Statement
+=============================
+Generally, after creating a table in SQL, we can insert data using the Insert statement. But in Hive, 
+we can insert data using the LOAD DATA statement.
+
+While inserting data into Hive, it is better to use LOAD DATA to store bulk records. 
+There are two ways to load data: one is from local file system and second is from Hadoop file system.
+
+The syntax for load data is as follows:
+
+LOAD DATA [LOCAL] INPATH 'filepath' [OVERWRITE] INTO TABLE tablename 
+[PARTITION (partcol1=val1, partcol2=val2 ...)]
+
+LOCAL is identifier to specify the local path. It is optional.
+OVERWRITE is optional to overwrite the data in the table.
+PARTITION is optional.
+
+Example
+We will insert the following data into the table. It is a text file named sample.txt in /home/user directory.
+1201  Gopal       45000    Technical manager
+1202  Manisha     45000    Proof reader
+1203  Masthanvali 40000    Technical writer
+1204  Kiran       40000    Hr Admin
+1205  Kranthi     30000    Op Admin
+
+The following query loads the given text into the table.
+
+hive> LOAD DATA LOCAL INPATH '/home/user/sample.txt'
+OVERWRITE INTO TABLE employee;
+
+// JDBC Execute Query Statement
+stmt.executeQuery("LOAD DATA LOCAL INPATH '/home/user/sample.txt'" + "OVERWRITE INTO TABLE employee;");
+      
+=============================	
+Alter Table Statement - It is used to alter a table in Hive.
+=============================	
+Syntax- The statement takes any of the following syntaxes based on what attributes we wish to modify in a table.
+
+ALTER TABLE table_name RENAME TO new_name
+	--> ALTER TABLE employee RENAME TO emp;
+	stmt.executeQuery("ALTER TABLE employee RENAME TO emp;");
+	
+ALTER TABLE table_name ADD COLUMNS (col_spec[, col_spec ...])
+	hive> ALTER TABLE employee ADD COLUMNS (dept STRING COMMENT 'Department name');
+
+ALTER TABLE name DROP [COLUMN] column_name
+	We cannot drop column directly from a table using command
+	The only way to drop column is using replace command. Lets say, I have a table TEST with id, name and case column. 
+	We want to drop id column of table TEST. So provide all those columns which you want to be the part of table in replace columns clause
+	ALTER TABLE TEST REPLACE COLUMNS( name string, case string);
+	
+ALTER TABLE table_name CHANGE column_name new_column_name new_column_datatype
+	hive> ALTER TABLE employee CHANGE name ename String;
+	hive> ALTER TABLE employee CHANGE salary salary Double;
+
+ALTER TABLE table_name REPLACE COLUMNS (col_spec[, col_spec ...])
+	hive> ALTER TABLE employee REPLACE COLUMNS (eid INT empid Int, ename STRING name String);
+	The above query deletes all the columns from the employee table and replaces it with emp and name columns:
+
+=============================
+Drop Table Statement
+=============================
+DROP TABLE [IF EXISTS] table_name;
+
+Query drops a table named employee:
+hive> DROP TABLE IF EXISTS employee;
+
+// JDBC execute statement
+	stmt.executeQuery("DROP TABLE IF EXISTS employee;");
+
+
+
+
+
+
+
+
+
+========================================================================================================================================
 
 
 Create hive table:
@@ -8,8 +226,10 @@ drop table hive_table;
 CREATE TABLE hive_table(  empno INT,  ename string,  designation string,  sal Double,  manager INT,  deptno INT)ROW FORMAT DELIMITED  FIELDS TERMINATED BY '\t'  LINES TERMINATED BY '\n' STORED AS TEXTFILE;
 
 
-load data to hive table:
 
+
+
+load data to hive table:
 LOAD DATA LOCAL INPATH '/home/training/dvs/employee_hive_hbase.csv' INTO TABLE hive_table;
 
 create HBase-hive Mapping Table
@@ -23,7 +243,7 @@ LOAD DATA LOCAL INPATH '/home/training/dvs/employee_hive_hbase.csv' INTO TABLE h
 ======= SET === 
 hive (default)> set <Hit EnterKey>
 
-for Dynamic Partitions
+=== For Dynamic Partitions ===
 hive.exec.dynamic.partition=true
 hive.exec.dynamic.partition.mode=strict
 hive.exec.max.dynamic.partitions=1000
