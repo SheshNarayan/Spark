@@ -122,7 +122,9 @@ Jharkhand	25.2
 =========
 
 SecondarySchool	Assam	Male	2015:56897,2016:575757,2017:585858
-SecondarySchool	Assam	fEMale	2015:19947,2016:20287,2017:33552
+SecondarySchool	Assam	Female	2015:19947,2016:20287,2017:33552
+SecondarySchool	Jharkhand	Male	2015:456987,2016:415263,2017:362514
+SecondarySchool	Jharkhand	Female	2015:12453,2016:52146,2017:63254
 
 Map is a collection of key-value pairs where fields are accessed using array notation of keys Eg: [‘Key’]
 hive> create table MySchools(schooltype string,state string,gender string, TOTAL MAP<INT,INT>) row format delimited fields terminated by ‘\t’ COLLECTION ITEMS TERMINATED BY ‘,’ MAP KEYS TERMINATED BY ‘:’;
@@ -135,8 +137,45 @@ gender      string
 TOTAL       MAP<INT,INT>
 
 hive> load data local inpath ‘/home/acadgild/Desktop/School_Data.txt’ into table MySchools;
-hive>  select * from MySchools;
+hive> select * from MySchools;
+SecondarySchool	Assam	Male	{2015:56897,2016:575757,2017:585858}
+SecondarySchool	Assam	Female	2{015:19947,2016:20287,2017:33552}
+SecondarySchool	Jharkhand	Male	{2015:456987,2016:415263,2017:362514}
+SecondarySchool	Jharkhand	Female	{2015:12453,2016:52146,2017:63254}
 
+hive> select total[2016] from MySchools where state=’Assam’;
+575757
+20287
+
+hive> select total[2017] from MySchools where state=’Jharkhand’ and gender=’Female’;
+63254
+
+==============
+=== Struct ===
+==============
+Struct is a record type which encapsulates a set of named fields that can be any primitive data type. An element in STRUCT type can be accessed using the DOT (.) notation.
+
+Yahama RZ	Aircooled,149.0,14.0,0
+Hero Mestro	Aircooled,155.0,14.8,0
+Honda Dio	Fule-injection,223.0,20.25,0
+
+hive> create table MyBikes(name string, BikeFeatures struct<EngineType:string,cc:float,power:float,gears:int>) row format delimited fields terminated by ‘\t’ collection items terminated by ‘,’;
+
+hive>  describe MyBikes;
+name 		string
+BikeFeatures 	struct<EngineType:string,cc:float,power:float,gears:int>
+
+hive> load data local inpath ‘/home/acadgild/Desktop/Bikes.txt’ into table MyBikes;
+
+hive> select * from MyBikes;
+Yahama RZ	{"EngineType":"Aircooled","cc":"149.0","power":"14.0","gears":"0"}
+Hero Mestro	{"EngineType":"Aircooled","cc":"155.0","power":"14.8,"gears":"0}
+Honda Dio	{"EngineType":"Fule-injection","cc":"223.0","power":","gears":"0"}
+
+hive> select BikeFeatures.EngineType from MyBikes;
+Aircooled
+Aircooled
+Fule-injection
 
 
 =============================		 
@@ -208,7 +247,7 @@ Query drops a table named employee:
 hive> DROP TABLE IF EXISTS employee;
 
 // JDBC execute statement
-	stmt.executeQuery("DROP TABLE IF EXISTS employee;");
+stmt.executeQuery("DROP TABLE IF EXISTS employee;");
 
 
 
