@@ -76,16 +76,13 @@ LINES TERMINATED BY ‘\n’
 STORED AS TEXTFILE;
 
 // JDBC Execute Query Statement
-      stmt.executeQuery("CREATE TABLE IF NOT EXISTS "
-         +" employee ( eid int, name String, salary String, destignation String) "
-         +" COMMENT ‘Employee details’"
-         +" ROW FORMAT DELIMITED"
-         +" FIELDS TERMINATED BY ‘\t’"
-         +" LINES TERMINATED BY ‘\n’"
-         +" STORED AS TEXTFILE;");
+      stmt.executeQuery("CREATE TABLE IF NOT EXISTS employee ( eid int, name String, salary String, destignation String) "
+         +" COMMENT ‘Employee details’ ROW FORMAT DELIMITED"
+         +" FIELDS TERMINATED BY ‘\t’ LINES TERMINATED BY ‘\n’ STORED AS TEXTFILE;");
 
+====================
 Complex Data Types
-
+====================
 arrays:   ARRAY<data_type>
 maps:     MAP<primitive_type, data_type>
 structs:  STRUCT<col_name : data_type [COMMENT col_comment], …>
@@ -177,6 +174,8 @@ Aircooled
 Aircooled
 Fule-injection
 
+hive> select BikeFeatures.EngineType from MyBikes where name=’Yahama RZ’;
+Aircooled
 
 =============================		 
 Load Data Statement
@@ -251,13 +250,157 @@ stmt.executeQuery("DROP TABLE IF EXISTS employee;");
 
 
 
+===============================================================================================================================
+	Hive - Partitioning and bucketing
+===============================================================================================================================
+What is Partitions?
+Hive Partitions is a way to organizes tables into partitions by dividing tables into different parts based on partition keys.
+Partition is helpful when the table has one or more Partition keys. Partition keys are basic elements for determining how the data is stored in the table.
+
+It is a way of dividing a table into related parts based on the values of partitioned columns such as date, city, and department. Using partition, it is easy to query a portion of the data.
+Tables or partitions are sub-divided into buckets, to provide extra structure to the data that may be used for more efficient querying. Bucketing works based on the value of hash function of some column of a table.
+For example, a table named Tab1 contains employee data such as id, name, dept, and yoj (i.e., year of joining). Suppose you need to retrieve the details of all employees who joined in 2012. A query searches the whole table for the required information. However, if you partition the employee data with the year and store it in a separate file, it reduces the query processing time. The following example shows how to partition a file and its data
+
+id, name, dept, yoj
+1, gopal, TP, 2012
+2, kiran, HR, 2012
+3, kaleel,SC, 2013
+4, Prasanth, SC, 2013
+
+The above data is partitioned into two files using year.
+
+/tab1/employeedata/2012/file2
+1, gopal, TP, 2012
+2, kiran, HR, 2012
+
+/tab1/employeedata/2013/file3
+3, kaleel,SC, 2013
+4, Prasanth, SC, 2013
+
+Adding a Partition
+=================================
+We can add partitions to a table by altering the table. Let us assume we have a table called employee with fields such as Id, Name, Salary, Designation, Dept, and yoj.
+
+Syntax:
+ALTER TABLE table_name ADD [IF NOT EXISTS] PARTITION partition_spec
+[LOCATION 'location1'] partition_spec [LOCATION 'location2'] ...;
+
+PARTITION_SPEC: (p_column = p_col_value, p_column = p_col_value, ...) The following query is used to add a partition to the employee table.
+
+hive> ALTER TABLE employee ADD PARTITION (year=’2012’) location '/2012/part2012';
+
+Renaming a Partition
+=================================
+The syntax of this command is as follows.
+ALTER TABLE table_name PARTITION partition_spec RENAME TO PARTITION partition_spec;
+
+The following query is used to rename a partition:
+hive> ALTER TABLE employee PARTITION (year=’1203’) RENAME TO PARTITION (Yoj=’1203’);
+
+
+Dropping a Partition
+=================================
+The following syntax is used to drop a partition:
+ALTER TABLE table_name DROP [IF EXISTS] PARTITION partition_spec, PARTITION partition_spec,...;
+
+The following query is used to drop a partition:
+hive> ALTER TABLE employee DROP [IF EXISTS] PARTITION (year=’1203’);
+
+Types of partitions:
+There are two types of partitions in Hive
+1. Static partitions
+2. Dynamic partitions
+We need to set the following properties For Dynamic Partitions: 
+hive.exec.dynamic.partition=true
+hive.exec.dynamic.partition.mode=strict
+
+==================================================================
+============================ Bucketing ===========================
+==================================================================
+Buckets in hive is used in segregating of hive table-data into multiple files or directories. it is used for efficient querying.
+
+* The data i.e. present in that partitions can be divided further into Buckets
+* The division is performed based on Hash of particular columns that we selected in the table.
+* Buckets use some form of Hashing algorithm at back end to read each record and place it into buckets
+*** In Hive, we have to enable buckets by using the set.hive.enforce.bucketing=true;
+
+
+
+
+===============================================================================================================================
+	Hive - View and Indexes
+===============================================================================================================================
+Views are generated based on user requirements. You can save any result set data as a view. The usage of view in Hive is same as that of the view in SQL. It is a standard RDBMS concept. We can execute all DML operations on a view.
+
+Creating a View
+====================================
+You can create a view at the time of executing a SELECT statement. The syntax is as follows:
+
+CREATE VIEW [IF NOT EXISTS] view_name [(column_name [COMMENT column_comment], ...) ]
+[COMMENT table_comment] AS SELECT ...
+
+Assume employee table as given below, with the fields Id, Name, Salary, Designation, and Dept. Generate a query to retrieve the employee details who earn a salary of more than Rs 30000. We store the result in a view named emp_30000.
++------+--------------+-------------+-------------------+--------+
+| ID   | Name         | Salary      | Designation       | Dept   |
++------+--------------+-------------+-------------------+--------+
+|1201  | Gopal        | 45000       | Technical manager | TP     |
+|1202  | Manisha      | 45000       | Proofreader       | PR     |
+|1203  | Masthanvali  | 40000       | Technical writer  | TP     |
+|1204  | Krian        | 40000       | Hr Admin          | HR     |
+|1205  | Kranthi      | 30000       | Op Admin          | Admin  |
++------+--------------+-------------+-------------------+--------+
+The following query retrieves the employee details using the above scenario:
+
+hive> CREATE VIEW emp_30000 AS SELECT * FROM employee WHERE salary>30000;
+
+Dropping a View
+====================================
+Use the following syntax to drop a view: 
+DROP VIEW view_name
+
+The following query drops a view named as emp_30000:
+hive> DROP VIEW emp_30000;
+
+========================================================
+Creating an Index
+==================
+An Index is nothing but a pointer on a particular column of a table. Creating an index means creating a pointer on a particular column of a table. Its syntax is as follows:
+
+CREATE INDEX index_name ON TABLE base_table_name (col_name, ...)
+AS 'index.handler.class.name' [WITH DEFERRED REBUILD] 
+[IDXPROPERTIES (property_name=property_value, ...)]
+[IN TABLE index_table_name]
+[PARTITIONED BY (col_name, ...)]
+[
+   [ ROW FORMAT ...] STORED AS ...
+   | STORED BY ...
+]
+[LOCATION hdfs_path]
+[TBLPROPERTIES (...)]
+
+Example: Let us take an example for index. Use the same employee table that we have used earlier with the fields Id, Name, Salary, Designation, and Dept. Create an index named index_salary on the salary column of the employee table.
+
+The following query creates an index:
+hive> CREATE INDEX inedx_salary ON TABLE employee(salary)
+AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler';
+
+It is a pointer to the salary column. If the column is modified, the changes are stored using an index value.
+
+
+Dropping an Index
+==================
+The following syntax is used to drop an index:
+DROP INDEX <index_name> ON <table_name>
+
+The following query drops an index named index_salary:
+hive> DROP INDEX index_salary ON employee;
+
+===============================================================================================================================
 
 
 
 
 
-
-========================================================================================================================================
 
 
 Create hive table:
