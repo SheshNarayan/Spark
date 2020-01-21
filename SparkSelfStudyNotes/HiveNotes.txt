@@ -306,13 +306,117 @@ ALTER TABLE table_name DROP [IF EXISTS] PARTITION partition_spec, PARTITION part
 The following query is used to drop a partition:
 hive> ALTER TABLE employee DROP [IF EXISTS] PARTITION (year=’1203’);
 
+===============================
 Types of partitions:
-There are two types of partitions in Hive
-1. Static partitions
-2. Dynamic partitions
+===============================
+Hive supports two types of partitions:
+1. Static Partition
+2. Dynamic partition
+
+1. Static Partition
+===============================
+In case, of static partitions, We need to have separate files for each partitions. While creating tables, partition columns should be mentioned at the end in partitioned by clause. Every time we load, we need to specify the partition value and file name.
+
+hive> CREATE TABLE STD (SNAME STRING, SID INT) PARTITIONED BY (YOP INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+hive> LOAD DATA LOCAL INPATH '/HOME/TRAINING/DVS/STD_2011.CSV' INTO TABLE STD PARTITION (YOP='2011');
+
+hive> LOAD DATA LOCAL INPATH '/HOME/TRAINING/DVS/STD_2012.CSV' INTO TABLE STD PARTITION (YOP='2012');
+
+hive> LOAD DATA LOCAL INPATH '/HOME/TRAINING/DVS/STD_2013.CSV' INTO TABLE STD PARTITION (YOP='2013');
+
+Drawback with static partitions:
+=================================
+1. If no. of files are more then no. of load commands we need to write more.
+2. User should be very careful while specifying the partition values and file name. Else wrong data will be loaded to the partitions
+3. IF we have mix all partitions data in one file then static partitions will not work.
+
+===============================
+2. Dynamic partition
+===============================
+Steps to creating dynamic partitions table:
+1. Create a Temporary (non-partitioned) table.
+2. Load data to Temporary table.
+3. Create partition table.
+4. Enable dynamic partitions using hive.exec.dynamic.partition=true and  hive.exec.dynamic.partition.mode=strict
+5. Insert data to partition table from temporary table.
+6. Drop temporary table.
+
 We need to set the following properties For Dynamic Partitions: 
 hive.exec.dynamic.partition=true
 hive.exec.dynamic.partition.mode=strict
+
+hive> CREATE TABLE STUD_TEMP(SNAME STRING, SID INT, YEAR INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+hive> LOAD DATA LOCAL INPATH '/HOME/TRAINING/DVS/STD/STD_ALL.CSV' INTO TABLE STUD_TEMP; 
+
+hive> set hive.exec.dynamic.partition.mode=strict;
+
+hive> CREATE TABLE STUD_DP(SNAME STRING, SID INT) PARTITIONED BY (YEAR INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+hive> INSERT INTO TABLE STUD_DP PARTITION(YEAR) SELECT * FROM STUD_TEMP;
+
+hive> DROP TABLE STUD_TEMP;
+
+Note: If there are any null values for year column, there will be a default hive partition created in warehouse directory under the table directory.
+
+
+Nested Partitions:
+=====================
+CREATE TABLE STD_TEMP2(SNAME STRING, SID INT, YEAR INT, MONTH INT, DAY INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+LOAD DATA LOCAL INPATH '/HOME/TRAINING/DVS/STD/STD_ALL.CSV' INTO TABLE STUD_TEMP2; 
+
+CREATE TABLE STUD_DP2(SNAME STRING, SID INT) PARTITIONED BY (YEAR INT, MONTH INT, DAY INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+hive> INSERT INTO TABLE STUD_DP2 PARTITION(YEAR, MONTH, DAY) SELECT * FROM STUD_TEMP2;
+
+??? What will happen if partition columns are not in sequence:
+* Create temporary table with same column sequence as input file.
+* Load data in temporary table.
+* Create partition table in the sequence that we wanted like year, month and day.
+* Insert data from temp table with same column sequence as partition table column sequence like
+
+CREATE TABLE STD_TEMP3(SNAME STRING, SID INT, DAY INT, MONTH INT, YEAR INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+LOAD DATA LOCAL INPATH '/HOME/TRAINING/DVS/STD/STUD.TXT' INTO TABLE STUD_TEMP3; 
+
+CREATE TABLE STUD_DP3(SNAME STRING, SID INT) PARTITIONED BY (YEAR INT, MONTH INT, DAY INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' ;
+
+INSERT INTO TABLE STUD_DP3 PARTITION(YEAR, MONTH, DAY) SELECT SNAME, SID, YEAR,MOTH,DAY FROM STUD_TEMP3;
+
+
+Partitions with External Table (With Location)
+==============================================
+CREATE EXTERNAL TABLE STUD_ET3 (SNAME STRING, SID INT) PARTITIONED BY(YEAR INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' LOCATION '/USER/TRAINING/DVS_HDFS/STUD' ;
+
+========================
+Exchanging partitions:
+========================
+Exchange partitions of one table to another table ( Both table must have the same structure)
+
+HIVE> ALTER TABLE STD1 EXCHANGE PARTITION(YOP=2015) WITH TABLE STD ;
+HIVE> ALTER TABLE STD1 EXCHANGE PARTITION(YOP=2016) WITH TABLE STD ;
+ 
+Repairing or Recovering partitions:
+hive> msck repair table std_dp;
+Note: This feature add from hive version hive-0.14.0. It may not work in lower version of hive.
+
+Enable  No Drop/OFF Line on Partition:
+=======================================
+ALTER TABLE STUD PARTITION(YEAR=2015) ENABLE NO_DROP;
+ENABLE NO_DROP - Will not allow you to drop this partition
+
+ALTER TABLE STUD PARTITION(YEAR=2015) DISABLE NO_DROP;
+DISABLE NO_DROP - Will allow you to drop this partition
+
+ALTER TABLE STUD PARTITION(YEAR=2015) ENABLE OFFLINE;
+ENABLE OFFLINE - Hide the partition
+
+ALTER TABLE STUD PARTITION(YEAR=2015) DISABLE OFFLINE;
+DISABLE OFFLINE - Un-hide the partition
+
+
 
 ==================================================================
 ============================ Bucketing ===========================
