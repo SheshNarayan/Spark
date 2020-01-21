@@ -2,7 +2,14 @@
 This can be accomplished using the import-all-tables import command in Sqoop and by specifying the exclude-tables option with it as follows-
 
 sqoop import-all-tables --connect jdbc:mysql://localhost:3306/ --username training --password training --exclude-tables Table298, Table 123, Table 299
+=================
+How will you list all the columns of a table using Apache Sqoop:
+sqoop import --m 1 --connect jdbc:mysql://localhost:3306/DVS_DB --username hadoop --password hadoop --query "SELECT column_name, DATA_TYPE FROM INFORMATION_SCHEMA.Columns WHERE table_name='dept' AND \$CONDITIONS" --target-dir 'SqoopData/mycustomers1'
 
+Delete QueryResult.jav	/training/dvs
+hadoop fs -cat /user/training/SqoopData/mycustomers1/part-m-00000
+hadoop fs -ls /user/training/SqoopData/mycustomers1
+===============
 
 
 
