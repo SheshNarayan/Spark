@@ -165,9 +165,9 @@ BikeFeatures 	struct<EngineType:string,cc:float,power:float,gears:int>
 hive> load data local inpath ‘/home/acadgild/Desktop/Bikes.txt’ into table MyBikes;
 
 hive> select * from MyBikes;
-Yahama RZ	{"EngineType":"Aircooled","cc":"149.0","power":"14.0","gears":"0"}
-Hero Mestro	{"EngineType":"Aircooled","cc":"155.0","power":"14.8","gears":"0"}
-Honda Dio	{"EngineType":"Fule-injection","cc":"223.0","power":"20.25","gears":"0"}
+Yahama RZ	{"EngineType":"Aircooled","cc":149.0,"power":14.0,"gears":0}
+Hero Mestro	{"EngineType":"Aircooled","cc":155.0,"power":14.8,"gears":0}
+Honda Dio	{"EngineType":"Fule-injection","cc":223.0,"power":20.25,"gears":0}
 
 hive> select BikeFeatures.EngineType from MyBikes;
 Aircooled
