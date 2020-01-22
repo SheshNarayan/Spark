@@ -277,6 +277,11 @@ The above data is partitioned into two files using year.
 3, kaleel,SC, 2013
 4, Prasanth, SC, 2013
 
+Creating partition
+=================================
+hive> CREATE TABLE STD(SNAME STRING, SID INT) PARTITIONED BY (YOP INT) ROW FORMAT DELIMITED  FIELDS TERMINATED BY ',' 
+***Note: When we creating partitions then the fileds used for creating partition is not the part of table fileds. here YOP is partition fileds is not used in STD(SNAME STRING, SID INT) table fileds.
+
 Adding a Partition
 =================================
 We can add partitions to a table by altering the table. Let us assume we have a table called employee with fields such as Id, Name, Salary, Designation, Dept, and yoj.
@@ -417,17 +422,52 @@ ALTER TABLE STUD PARTITION(YEAR=2015) DISABLE OFFLINE;
 DISABLE OFFLINE - Un-hide the partition
 
 
-
 ==================================================================
 ============================ Bucketing ===========================
 ==================================================================
 Buckets in hive is used in segregating of hive table-data into multiple files or directories. it is used for efficient querying.
-
 * The data i.e. present in that partitions can be divided further into Buckets
 * The division is performed based on Hash of particular columns that we selected in the table.
 * Buckets use some form of Hashing algorithm at back end to read each record and place it into buckets
 *** In Hive, we have to enable buckets by using the set.hive.enforce.bucketing=true;
 
+Bucketing is also one more way of decomposing a big data set into small and manageable data sets like partirioning.
+Bucketing is mainly used for 2 reasons:
+1. For faster joins (Join optimizatioin)
+2. Table sampling
+
+Creating a bucked table
+=========================
+
+hive> create table emp_bk1(empno int, ename string, job string, sal float, comm flosat, DEPTNO int) CLUSTERED BY(DEPTNO) INTO 3 BUCKETS row format delimited fields terminated by ',' ;
+
+Steps involved in creating a bucketd tables
+============================================
+1. Create a tempprary table.
+2. Load data in tempprary table.
+3. Create Bucketed Table.
+4. Enable bucketing by using set hive.enforce.bucketing=true
+5. Insert data into bucked table from tempprary table.
+6. Drop tempprary table.
+
+Enable bucketing:
+hive> set hive.enforce.bucketing=true
+
+hive> insert into table emp_bk1 select * from emp_et_wl;
+
+*** Note: It creates index based on the buckeded column for faster lookups (Joins)
+
+Getting bucket wise sampling
+==============================
+hive> select * from emp_bk1 tablesample(1 out of 3 on deptno);
+
+hive> select * from emp_bk1 tablesample( bucket 1 out of 3 on deptno);
+
+hive> select * from emp_bk1 tablesample(3 out of 3 on deptno);
+
+Getting percentage wise sampling
+================================
+hive> select * from emp_bk1 tablesample(10 percent);
 
 
 
@@ -500,13 +540,133 @@ The following query drops an index named index_salary:
 hive> DROP INDEX index_salary ON employee;
 
 ===============================================================================================================================
+FILE FORMATS
+===============================================================================================================================
+File formats are mainly used foe dast retrieval, faster writing and compression. Below is some of file formats:
+TEXTFILE
+RC
+PARQUET
+ORC and many more
+
+hive> create table emp_text(empno int, ename string, sal float, comm float,  deptno int) row format delimited fields terminated by ',' STORED AS textfile;
+
+hive> load data local inpath '/home/training/dvs/emp.csv' into table emp_text;
 
 
+hive> create table emp_rc(empno int, ename string, sal float, comm float, deptno int) row format delimited fields terminated by ',' stored as rcfile;
+	OR
+hive> create table emp_rc stored as rcfile as select * from emp_text;
+
+hive> insert into table emp_rc select * from emp_text;
+
+*** Note: Try with other formats wiht some more data so that you can feel the difference the file formats. You can try all the fole formats wiht latest version of cloudera.
+
+hive> create table emp_orc(empno int, ename string, sal float, comm float, deptno int) row format delimited fields terminated by ',' stored as orcfile;
+
+hive> create table emp_pr(empno int, ename string, sal float, comm float, deptno int) row format delimited fields terminated by ',' stored as parquetfile;
+
+hive> create table emp_avro(empno int, ename string, sal float, comm float, deptno int) row format delimited fields terminated by ',' stored as avrofile;
+
+Goto to warehouse directory and see the file formats which may not be user understandable/readable format.
+
+USE CASES:
+==========
+a. If your data is delimited by some parameters then you can use TESTFILE format.
+
+b. If your data is in small files whose size is less than the block size then you cna use SEQUENCEFILE format.
+
+c. If you want to perform analytis on your data and you wnat to store your data effeciently for that then you can use RCFILE format.
+
+d. If you want to store your data in an optimized way which lessens your storage and increase your performance then you use ORCFILE format.
 
 
+=============================================================================================================================
+MISCELIANEOUS
+=============================================================================================================================
+Create a temporary table (Supports from hive-0.14.0 onwards)
+
+hive> create TEMPORARY table std_temp(sname string, sid int, yop int) row format delimited fields terminated by ',';
+
+The above table will have existence till the end of the session and will be deleted once we come out of the session 
+
+ENABLING AUTO PURGE:
+======================
+If trash is enabled thn the data will go to trash, in case of auto purge the data will not go to trash and will be permanently deleted.
+
+hive> set TBLPROPERTIES("auto.purse" = "true")
+
+SKIPPING 'N' LINES OF DATA WHILE LOADING THE DATA
+==================================================
+hive> create table emp3(empno int, ename string, sal double, comm float, deptno int) row format delimited fields terminated by ',' TBLPROPERTIES('skip.header.line.count'='1','Createor'='Shesh', 'Date'='2020-01-22',auto.purge=true) ;
+
+By using skip.header.line.count option, We use skip header of the file whiling loading data to the table if the file is comming with column headers.
+
+CREATING DATABASE WITH DB PRPERTIES
+=====================================
+hive> create database kcdb comment 'SHESH DB' with DBPROPERTIES('Createor'='Minkesh', 'Date'='2020-01-22');
+
+CHECKING DB PROPERTIES:
+===============================
+Create database shesh location '/user/training/warehouse/shesh.db' ;
+
+hive> describe database extended kcdb;
 
 
+CREATING TABLE WITH TABLE PRPERTIES
+=====================================
+hive> create table emp(empno int, ename string) row format delimited fields terminated by ',' TBLPROPERTIES('Createor'='Shesh', 'Date'='2020-01-22') ;
 
+CHECKING TABLE PROPERTIES
+===========================
+hive> describe formatted emp;
+
+SWITCH A TABLE FROM INTERNAL/MANAGED TO EXTERNAL
+=================================================
+hive> alter table table_name SET TBLPROPERTIES('EXTERNAL' = 'TRUE');
+
+SWITCH A TABLE FROM EXTERNAL TO INTERNAL/MANAGED  
+=================================================
+hive> alter table table_name SET TBLPROPERTIES('EXTERNAL' = 'FALSE');
+
+CHANGEING FROM ONE DATA TYPE TO ANOTHER DATATYPE
+=================================================
+hive> select case(sal as int) from emp;
+
+IMPORTING STRUCTURE OF ANOTHER TABLE IN HIVE
+=================================================
+hive> create table emp3 as select * from emp1 where 1=2;
+hive> create table t2 like emp;
+
+IMPORTING STRUCTURE TABLE AND DATA OF  ANOTHER TABLE IN HIVE
+=============================================================
+hive> create table emp3 as select * from emp1;
+
+TRUNCATING DATA OF HIVE TABLE WITHOUT USING TRUNCATE COMMAND
+=============================================================
+hive> insert overwrite table emp1 select * from emp where 1=2;
+hive> insert into table emp1 select * from emp;
+
+INSERTING DATA IN TO A HIVE TABLE FORM ANOTHER HIVE TABLE
+==============================================================
+hive> insert into table empl2 select * from emp1;
+
+WHAT HAPPEN IF WAREHOUSE PATH IS CHANGED?
+=============================================
+The default location of all the table ans databses will be changed and existing databases and tables will still reside in the same location.
+
+RESTRICTING FULL TABLE SCAN ON PARTITIONED TABLES:
+======================================================
+set hive.mapred.mode=strict;
+This property does not allow to query artitioned tables without where condition. THis prevents very large job running for long time.
+
+Hadoop job -list;
+hadoop job -kill job_id
+
+What is the significance of "IF EXISTS" clause while dropping a table?
+===================================================================
+When we issue the command DROP TABLE TABLE_NAME hive throws an error if hte table being dropped does not exist. So to avoid we use "IF EXISTS" clause. i.e. DROP TABLE IF EXISTS TABLE_NAME
+
+==============================================================================================================================
 Create hive table:
 drop table hive_table;
 CREATE TABLE hive_table(  empno INT,  ename string,  designation string,  sal Double,  manager INT,  deptno INT)ROW FORMAT DELIMITED  FIELDS TERMINATED BY '\t'  LINES TERMINATED BY '\n' STORED AS TEXTFILE;
