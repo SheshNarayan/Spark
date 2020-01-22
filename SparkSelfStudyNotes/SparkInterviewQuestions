@@ -1,1 +1,9 @@
 
+Feature of Spark SQL:
+=========================
+1. Integration with spark - Spark SQL queries can integerated with spark Program.
+2. Unified data access - Dataframe and SQL supprots common way to access a varity of data source like Avro, Parqute, Hive, ORC,JSON and JDBC 
+3. Hive capabilities - Can runs unmodified Hive queries on current data
+4. Standard connectivity-
+5. Performance and scalability - SparkSQL executes 100X faster than Hadoop.
+6. User define function
