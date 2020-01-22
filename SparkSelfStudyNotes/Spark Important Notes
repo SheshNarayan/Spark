@@ -1,0 +1,61 @@
+
+Spark SQL
+============
+Spark SQL is Spark’s interface for working with structured and semi-structured data. 
+Structured data is considered any data that has a schema such as JSON, Hive Tables, Parquet. Schema means having a known set of fields for each record.  
+Semistructured data is when there is no separation between the schema and the data
+
+Spark SQL provides three main capabilities for using structured and semistructured data:
+1. It provides a DataFrame abstraction in Python, Java, and Scala to simplify working with structured datasets.
+DataFrames are similar to tables in a relational database.
+2. It can read and write data in a variety of structured formats (e.g., JSON, Hive Tables, and Parquet).
+3. It lets you query the data using SQL, both inside a Spark program and from external tools that connect to Spark SQL through standard database connectors (JDBC/ ODBC), such as business intelligence tools like Tableau.
+
+Components of Spark SQL
+========https://intellipaat.com/blog/what-is-spark-sql/=========== 
+1. Spark SQL DataFrames: Spark DataFrame is a distributed collection of data ordered into named columns. Spark DataFrame is quite similar to that.
+2. Spark SQL Datasets: In the version 1.6 of Spark, Spark dataset was the interface that was added. The catch with this interface is that it provides the benefits of RDDs along with the benefits of optimized execution engine of Apache Spark SQL. To achieve conversion between JVM objects and tabular representation, the concept of encoder is used. Using JVM objects, a dataset can be incepted, and functional transformations like map, filter, etc. have to be used to modify them. The dataset API is available both in Scala and Java, but it is not supported in Python.
+Spark Catalyst Optimizer: Catalyst optimizer is the optimizer used in Spark SQL and all queries written by Spark SQL and DataFrame DSL is optimized by this tool. This optimizer is better than the RDD, and hence the performance of the system is increased.
+
+Feature of Spark SQL:
+=========================
+1. Integration/Integrated with spark - Spark SQL queries can integerated with spark Program.
+2. Unified Data Access - Dataframe and SQL supprots common way to access a varity of data source like Avro, Parqute, Hive, ORC,JSON and JDBC 
+3. Hive capabilities - Can runs unmodified Hive queries on current data
+4. Standard connectivity-
+5. Performance and scalability - SparkSQL executes 100X faster than Hadoop.
+6. User define function
+
+
+Apache Spark
+==================
+* Apache Spark is a lightning-fast unified analytics engine for big data and machine learning.
+* Apache Spark is an open-source distributed cluster-computing framework. 
+Spark is a data processing engine developed to provide faster and easy-to-use analytics than Hadoop MapReduce.
+
+ADVANTAGES	
+================
+Speed/fast processing
+Ease of Use
+Advanced Analytics
+Dynamic in Nature/Flexibility 
+Multilingual
+Apache Spark is powerful
+Increased access to Big data
+Open-source community
+In-memory computing
+Real-time processing
+Better analytics
+Lazy Evaluation
+Less Lines of Code
+
+DISADVANTAGES
+================
+No automatic optimization process
+File Management System
+Fewer Algorithms
+Small Files Issue
+Windowing Criteria - not support for record level supports for time interval
+Doesn’t suit for a multi-user environment
+No Support for Real-time Processing
+
