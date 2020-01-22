@@ -1,4 +1,24 @@
+Hive Commands
+==================
+hbase shell - to start Hbase.
+version - To display HBase version.
+Status - To display Hbase Status
+	status
+	status 'simple'
+	status 'summary'
+	status 'detailed'
 
+who am i -- 
+Table management command
+==========================
+
+
+
+Version Control for HBase Record 
+*** The default setting may be configured with hbase.column.max.version in hbase-site.xml
+
+alter 'tableName', NAME=> 'colFamilyName', VERSIONS=>3
+alter 'emp', NAME=>'pinfo', VERSIONS=>3
 Hive to HBase ......
 =====================
 CREATE EXTERNAL TABLE emp(id int, city string, name string, occupation string, salary int) 
