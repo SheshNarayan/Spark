@@ -1,0 +1,89 @@
+
+// Below profgram will explain how ues for loop, for loop with filter, until, yield, Double dimention array using .odDim(), Pattern matching, Pattern matching using Tuple
+object MyClass {
+     def main(args: Array[String]) {
+      
+      println(raw"Using for(i<-1 to 5) ")
+        for(i<-1 to 5){
+            println(i)
+        }
+        
+        println(raw"Using for(i<- 1 until 5 ) ")
+        for(i<- 1 until 5 ){
+            println(s"Using Uitl : ${i}")
+        }
+        
+        println(raw"Using for(i<- 1 to 10 if(i%2==0))")
+        for(i<- 1 to 10 if(i%2==0)){
+            println(i)
+        }
+        
+        val donutIngredients = List("flour", "sugar", "egg yolks", "syrup", "flavouring")
+        for(ingredient <- donutIngredients if ingredient == "sugar"){
+            println(s"Found sweetening ingredient = $ingredient")
+        }
+        
+        println("4: Filter values using if conditions in for loop and return the result back using the yield keyword")
+        val sweeteningIngredients = for {
+            ingredient <- donutIngredients
+            if (ingredient == "sugar" || ingredient == "syrup")
+        } yield ingredient
+        println(s"Sweetening ingredients = $sweeteningIngredients")
+        
+        
+        val twoDimensionalArray = Array.ofDim[String](2,3)
+        twoDimensionalArray(0)(0) = "flour"
+        twoDimensionalArray(0)(1) = "sugar"
+        twoDimensionalArray(0)(2) = "Choklet"
+        twoDimensionalArray(1)(0) = "egg"
+        twoDimensionalArray(1)(1) = "syrup"
+        twoDimensionalArray(1)(2) = "Butter"
+        
+        for {   x <- 0 until twoDimensionalArray.length
+                y <- 0 until twoDimensionalArray(1).length
+        } println(s"Donut ingredient at index ${(x,y)} = ${twoDimensionalArray(x)(y)}")
+        
+        val multiDimensionalArray = Array.ofDim[String](4,6,8,2)
+        println(multiDimensionalArray.length)           // 4
+        println(multiDimensionalArray(1).length)        // 6
+        println(multiDimensionalArray(1)(2).length)     // 8
+        println(multiDimensionalArray(1)(2)(3).length)  // 2
+    
+         
+         
+         
+        println("\nStep 4: Pattern matching with two or more items on the same condition")
+        val donutType = "Strawberry Donut" //"Glazed Donut"
+        
+        val tasteLevel3 = donutType match {
+            case "Glazed Donut" | "Strawberry Donut" => "Very tasty"
+            case "Plain Donut" => "Tasty"
+            case _ => "Tasty"
+        }
+        println(s"Taste level of ${donutType} = ${tasteLevel3}")
+         
+        val tasteLevel4 = donutType match {
+            case donut if (donut.contains("Glazed") || donut.contains("Strawberry")) => "VERY tasty"
+            case "Plain Donut"  => "Tasty"
+            case _  => "Tasty"
+        }
+        println(s"Taste level of $donutType = $tasteLevel4")
+         
+        //////////
+        println("======= pattern matching on Tuples =========")
+        val glazedDonut = Tuple3("Glazed Donut", "Very Tasty", 2.50)
+        val strawberryDonut = Tuple3("Strawberry Donut", "Very Tasty", 4.50)
+        val plainDonut = Tuple3("Plain Donut", "Tasty", 2)
+        val donutList = List(glazedDonut, strawberryDonut, plainDonut)
+        
+        val priceOfPlainDonut = donutList.foreach { tuple => {
+            tuple match {
+                case ("Plain Donut", taste, price) => println(s"Donut type = Plain Donut, price = $price")
+                case d if d._1 == "Glazed Donut" => println(s"Donut type = ${d._1}, price = ${d._3}")
+                case d if (d._1.toUpperCase().contains("STRAWBERRY")) => println(s"Donut type = ${d._1}, price = ${d._3}")
+                case _ => None
+            }
+          }
+        }        
+     }
+}
