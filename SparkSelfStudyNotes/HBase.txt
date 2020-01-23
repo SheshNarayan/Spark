@@ -1,5 +1,17 @@
 
 
+http://www.informit.com/articles/article.aspx?p=2253412
+
+HBase is called the Hadoop database because it is a NoSQL database that runs on top of Hadoop. It combines the scalability of Hadoop by running on the Hadoop Distributed File System (HDFS), with real-time data access as a key/value store and deep analytic capabilities of Map Reduce.
+
+HBase can leverage the distributed processing paradigm of the Hadoop Distributed File System (HDFS) and benefit from Hadoop’s MapReduce programming model. It is meant to host large tables with billions of rows with potentially millions of columns and run across a cluster of commodity hardware. But beyond its Hadoop roots, HBase is a powerful database in its own right that blends real-time query capabilities with the speed of a key/value store and offline or batch processing via MapReduce. In short, HBase allows you to query for individual records as well as derive aggregate analytic reports across a massive amount of data.
+
+HBase is not a relational database and requires a different approach to modeling your data. HBase actually defines a four-dimensional data model and the following four coordinates define each cell (see Figure 1):
+
+Row Key: Each row has a unique row key; the row key does not have a data type and is treated internally as a byte array.
+Column Family: Data inside a row is organized into column families; each row has the same set of column families, but across rows, the same column families do not need the same column qualifiers. Under-the-hood, HBase stores column families in their own data files, so they need to be defined upfront, and changes to column families are difficult to make.
+Column Qualifier: Column families define actual columns, which are called column qualifiers. You can think of column qualifiers as the columns themselves.
+Version: Each column can have a configurable number of versions, and you can access the data for a specific version of a column qualifier.
 
 ===============================================================================
 HBASE SHELL COMMANDS ARE MAINLY CATEGORIZED INTO 6 PARTS
