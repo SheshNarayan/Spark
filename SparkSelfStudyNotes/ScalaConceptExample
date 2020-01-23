@@ -87,3 +87,45 @@ object MyClass {
         }        
      }
 }
+//=========================== Output ==================
+/*
+Using for(i<-1 to 5) 
+1
+2
+3
+4
+5
+Using for(i<- 1 until 5 ) 
+Using Uitl : 1
+Using Uitl : 2
+Using Uitl : 3
+Using Uitl : 4
+Using for(i<- 1 to 10 if(i%2==0))
+2
+4
+6
+8
+10
+Found sweetening ingredient = sugar
+4: Filter values using if conditions in for loop and return the result back using the yield keyword
+Sweetening ingredients = List(sugar, syrup)
+Donut ingredient at index (0,0) = flour
+Donut ingredient at index (0,1) = sugar
+Donut ingredient at index (0,2) = Choklet
+Donut ingredient at index (1,0) = egg
+Donut ingredient at index (1,1) = syrup
+Donut ingredient at index (1,2) = Butter
+4
+6
+8
+2
+
+Step 4: Pattern matching with two or more items on the same condition
+Taste level of Strawberry Donut = Very tasty
+Taste level of Strawberry Donut = VERY tasty
+======= pattern matching on Tuples =========
+Donut type = Glazed Donut, price = 2.5
+Donut type = Strawberry Donut, price = 4.5
+Donut type = Plain Donut, price = 2
+
+*/
