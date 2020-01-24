@@ -1,3 +1,14 @@
+
+/**
+ * Learn How To Create Abstract Class, Covariance, Contra Variance Restrict Type Class
+ * abstract keyword is used to define abstract Class.
+ * override keyword is used to override the parent class methods in chield/sub Class
+ * case class will automatically provide a companion object.
+ * With the notation [D <: Donut], we are restricting only Donut types to be passed-through to the ShoppingCart class.
+ * We've enabled contra-variance of type Donuts using the notation [-D <: Donut]
+ * In other words, you can now have a ShoppingCart of type VainllaDonut ShoppingCart[VanillaDonut] reference ShoppingCart of type Donut ShoppingCart2[Donut]
+ */
+
 object MyClass {
     def main(args: Array[String]) {
       
@@ -50,6 +61,13 @@ object MyClass {
         val shoppingCart2: ShoppingCart2[Donut] = new ShoppingCart2[VanillaDonut](Seq(vanillaDonut1))
         shoppingCart2.printCartItems
       
+        println(s"\nStep 8: How to enable contra-variance on ShoppingCart")
+        class ShoppingCart3[-D <: Donut](donuts: Seq[D]) {
+            def printCartItems: Unit = donuts.foreach(_.printName)
+        }
+        val shoppingCart3: ShoppingCart3[VanillaDonut] = new ShoppingCart3[Donut](Seq(glazedDonut))
+        shoppingCart3.printCartItems
+        
        println("Main--- Ended ---- ")
      } // main closed
 } // class MyClass closed
