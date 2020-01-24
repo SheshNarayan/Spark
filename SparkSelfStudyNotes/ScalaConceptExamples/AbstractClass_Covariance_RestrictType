@@ -1,0 +1,55 @@
+object MyClass {
+    def main(args: Array[String]) {
+      
+        println("Step 1: How to define an abstract class called Donut")
+        abstract class Donut(name: String) {
+            def printName: Unit
+        }
+
+        println("\nStep 2: How to extend abstract class Donut and define a case class called VanillaDonut")
+        case class VanillaDonut(name: String) extends Donut(name) {
+            override def printName: Unit = println(name)
+        }
+    
+        println("\nStep 3: How to extend abstract class Donut and define another case class called GlazedDonut")
+        case class GlazedDonut(name: String) extends Donut(name) {
+            override def printName: Unit = println(name)
+        }
+            
+        println("\nStep 4: How to instantiate Donut objects")
+        val vanillaDonut: Donut = VanillaDonut("Vanilla Donut")
+        vanillaDonut.printName
+        
+        val glazedDonut: Donut = GlazedDonut("Glazed Donut") //  val glazedDonut = GlazedDonut("Glazed Donut")
+        glazedDonut.printName
+    
+    
+        println("\nStep 5: How to define a ShoppingCart typed class which expects(उम्मीद) or restricting Donut  types")
+        //With the notation [D <: Donut], we are restricting only Donut types to be passed-through to the ShoppingCart class.
+        class ShoppingCart[D <: Donut](donuts: Seq[D]) {
+            def printCartItems: Unit = donuts.foreach(_.printName)
+        }
+        println("\nStep 6: How to create instances or objects of ShoppingCart class")
+        val shoppingCart: ShoppingCart[Donut] = new ShoppingCart(Seq[Donut](vanillaDonut, glazedDonut))
+        shoppingCart.printCartItems
+
+        //  you will get a compiler error if you tried to create ShoppingCart of type String
+        //val shoppingCart2: ShoppingCart[Donut] = new ShoppingCart[String](Seq("Vanilla Donut"))
+       
+       // if you need to create a ShoppingCart of type VanillaDonut? You will get a compiler error for a ShoppingCart of type VanillaDonut
+       //val shoppingCart: ShoppingCart[Donut] = new ShoppingCart[VanillaDonut](Seq(vanillaDonut))
+      
+        //We've enabled covariance of type Donuts using the notation [+D <: Donut]
+        println("\nStep 4.1: How to instantiate Donut objects for 'covariance' ")
+        val vanillaDonut1: VanillaDonut = VanillaDonut("VANILLA DONUT")
+        vanillaDonut1.printName
+        println(s"\nStep 7: How to enable covariance on ShoppingCart")
+        class ShoppingCart2[+D <: Donut](donuts: Seq[D]) {
+            def printCartItems: Unit = donuts.foreach(_.printName)
+        }
+        val shoppingCart2: ShoppingCart2[Donut] = new ShoppingCart2[VanillaDonut](Seq(vanillaDonut1))
+        shoppingCart2.printCartItems
+      
+       println("Main--- Ended ---- ")
+     } // main closed
+} // class MyClass closed
