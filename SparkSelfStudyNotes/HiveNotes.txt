@@ -1,8 +1,11 @@
 TMP and TEMP
 %USERPROFILE%\AppData\Local\Temp
-
+-- https://cwiki.apache.org/confluence/display/Hive/Design
+-- https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-DropTable
 SelfNotes
 ========================================================================================================================================
+The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.
+Apache Hive is a data warehouse system for data summarization and analysis and for querying of large data systems in the open-source Hadoop platform. It converts SQL-like queries into MapReduce jobs for easy execution and processing of extremely large volumes of data.
 
 =============================
 Create Database Statement - Create Database is a statement used to create a database in Hive. A database in Hive is a namespace or a collection of tables. 
@@ -10,7 +13,8 @@ Create Database Statement - Create Database is a statement used to create a data
 Hive contains a default database named default.
 CREATE DATABASE|SCHEMA [IF NOT EXISTS] <database name>
 
-hive> CREATE DATABASE [IF NOT EXISTS] userdb;
+hive> CREATE DATABASE IF NOT EXISTS userdb; 
+	OR
 hive> CREATE SCHEMA userdb;
 
 hive> SHOW DATABASES;
@@ -49,7 +53,7 @@ public class HiveCreateDb {
 =============================
 Drop Database Statement - Drop Database is a statement that drops all the tables and deletes the database.
 =============================
-DROP DATABASE StatementDROP (DATABASE|SCHEMA) [IF EXISTS] database_name  [RESTRICT|CASCADE];
+DROP (DATABASE|SCHEMA) [IF EXISTS] database_name  [RESTRICT|CASCADE];
 -> Drops the database using CASCADE means dropping respective tables before dropping the database.
 
 hive> DROP DATABASE IF EXISTS userdb CASCADE;
@@ -689,6 +693,14 @@ LOAD DATA LOCAL INPATH '/home/training/dvs/employee_hive_hbase.csv' INTO TABLE h
 ======= SET === 
 hive (default)> set <Hit EnterKey>
 
+-- To Print current db with Hive Cli propmpt
+set hive.cli.print.current.db=true;
+
+-- To enable bucketing
+set hive.enforce.bucketing=true
+
+-- 
+external.table.purge=true
 === For Dynamic Partitions ===
 hive.exec.dynamic.partition=true
 hive.exec.dynamic.partition.mode=strict
