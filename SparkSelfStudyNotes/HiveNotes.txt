@@ -2,6 +2,7 @@ TMP and TEMP
 %USERPROFILE%\AppData\Local\Temp
 -- https://cwiki.apache.org/confluence/display/Hive/Design
 -- https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-DropTable
+-- https://docs.cloudera.com/HDPDocuments/HDP3/HDP-3.1.0/using-hiveql/content/hive_create_insert_only_transactional_table.html
 SelfNotes
 ========================================================================================================================================
 The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large datasets residing in distributed storage using SQL. Structure can be projected onto data already in storage. A command line tool and JDBC driver are provided to connect users to Hive.
@@ -72,12 +73,27 @@ CREATE [TEMPORARY] [EXTERNAL] TABLE [IF NOT EXISTS] [db_name.] table_name
 [STORED AS file_format]
 
 hive> CREATE TABLE IF NOT EXISTS employee ( eid int, name String,
-salary String, destination String)
-COMMENT ‘Employee details’
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ‘\t’
-LINES TERMINATED BY ‘\n’
-STORED AS TEXTFILE;
+	salary String, destination String)
+	COMMENT ‘Employee details’
+	ROW FORMAT DELIMITED
+	FIELDS TERMINATED BY ‘\t’
+	LINES TERMINATED BY ‘\n’
+	STORED AS TEXTFILE;
+
+-- Create an external table to store the CSV data, configuring the table so you can drop it along with the data.
+hive> CREATE EXTERNAL TABLE IF NOT EXISTS names_text(a INT, b STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+  	STORED AS TEXTFILE LOCATION '/user/shesh'
+  	TBLPROPERTIES ('external.table.purge'='true');   
+An EXTERNAL table points to any HDFS location for its storage, rather than being stored in a folder specified by the configuration property hive.metastore.warehouse.dir.
+
+hive> DROP TABLE names_text;
+The table is removed from Hive Metastore and the data stored externally. For example, names_text is removed from the Hive Metastore and the CSV file that stored the data is also deleted from HDFS.
+
+-- Prevent data in external table from being deleted by a DROP TABLE statement.
+hive> ALTER TABLE addresses_text SET TBLPROPERTIES ('external.table.purge'='false');
+
+-- Create a insert-only transactional table named T2 having two integer columns, a and b:
+hive> CREATE TABLE T2(a int, b int) TBLPROPERTIES ('transactional_properties'='insert_only');
 
 // JDBC Execute Query Statement
       stmt.executeQuery("CREATE TABLE IF NOT EXISTS employee ( eid int, name String, salary String, destignation String) "
@@ -599,6 +615,13 @@ If trash is enabled thn the data will go to trash, in case of auto purge the dat
 
 hive> set TBLPROPERTIES("auto.purse" = "true")
 
+ENABLING PURGING TO EXTERNAL TABLE:
+=====================================
+Create an external table to store the CSV data, configuring the table so you can drop it along with the data.
+CREATE EXTERNAL TABLE IF NOT EXISTS names_text(a INT, b STRING) ROW FORMAT DELIMITED 
+FIELDS TERMINATED BY ',' STORED AS TEXTFILE
+LOCATION '/user/shesh' TBLPROPERTIES ('external.table.purge'='true');   
+
 SKIPPING 'N' LINES OF DATA WHILE LOADING THE DATA
 ==================================================
 hive> create table emp3(empno int, ename string, sal double, comm float, deptno int) row format delimited fields terminated by ',' TBLPROPERTIES('skip.header.line.count'='1','Createor'='Shesh', 'Date'='2020-01-22',auto.purge=true) ;
@@ -668,22 +691,19 @@ hadoop job -kill job_id
 
 What is the significance of "IF EXISTS" clause while dropping a table?
 ===================================================================
-When we issue the command DROP TABLE TABLE_NAME hive throws an error if hte table being dropped does not exist. So to avoid we use "IF EXISTS" clause. i.e. DROP TABLE IF EXISTS TABLE_NAME
+When we issue the command DROP TABLE TABLE_NAME hive throws an error if hte table being dropped does not exist. 
+So to avoid we use "IF EXISTS" clause. i.e. DROP TABLE IF EXISTS TABLE_NAME
 
 ==============================================================================================================================
 Create hive table:
 drop table hive_table;
 CREATE TABLE hive_table(  empno INT,  ename string,  designation string,  sal Double,  manager INT,  deptno INT)ROW FORMAT DELIMITED  FIELDS TERMINATED BY '\t'  LINES TERMINATED BY '\n' STORED AS TEXTFILE;
 
-
-
-
-
 load data to hive table:
 LOAD DATA LOCAL INPATH '/home/training/dvs/employee_hive_hbase.csv' INTO TABLE hive_table;
 
 create HBase-hive Mapping Table
-
+=================================
 CREATE TABLE hbase_table_employee(empno INT, ename STRING, designation STRING, sal Double, manager INT, deptno INT ) STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
 WITH SERDEPROPERTIES ("hbase.columns.mapping" = ":key, cf:ename, cf:designation, cf:sal,  cf:manager, cf:deptno") TBLPROPERTIES ("hbase.table.name" = "employee_hbase");
 
@@ -699,8 +719,9 @@ set hive.cli.print.current.db=true;
 -- To enable bucketing
 set hive.enforce.bucketing=true
 
--- 
+-- Purge external table data
 external.table.purge=true
+
 === For Dynamic Partitions ===
 hive.exec.dynamic.partition=true
 hive.exec.dynamic.partition.mode=strict
