@@ -15,7 +15,7 @@ Components of Spark SQL
 ========https://intellipaat.com/blog/what-is-spark-sql/=========== 
 1. Spark SQL DataFrames: Spark DataFrame is a distributed collection of data ordered into named columns. Spark DataFrame is quite similar to that.
 2. Spark SQL Datasets: In the version 1.6 of Spark, Spark dataset was the interface that was added. The catch with this interface is that it provides the benefits of RDDs along with the benefits of optimized execution engine of Apache Spark SQL. To achieve conversion between JVM objects and tabular representation, the concept of encoder is used. Using JVM objects, a dataset can be incepted, and functional transformations like map, filter, etc. have to be used to modify them. The dataset API is available both in Scala and Java, but it is not supported in Python.
-Spark Catalyst Optimizer: Catalyst optimizer is the optimizer used in Spark SQL and all queries written by Spark SQL and DataFrame DSL is optimized by this tool. This optimizer is better than the RDD, and hence the performance of the system is increased.
+3. Spark Catalyst Optimizer: Catalyst optimizer is the optimizer used in Spark SQL and all queries written by Spark SQL and DataFrame DSL is optimized by this tool. This optimizer is better than the RDD, and hence the performance of the system is increased.
 
 Feature of Spark SQL:
 =========================
@@ -25,6 +25,39 @@ Feature of Spark SQL:
 4. Standard connectivity-
 5. Performance and scalability - SparkSQL executes 100X faster than Hadoop.
 6. User define function
+
+Disadvantages of Spark SQL
+==========================
+1. Unsupportive union type-It is impossible to create or read a table containing union fields.
+2. No error for oversize of varchar type - While we work with SparkSQL, it considers varchar as a string.Therefore it has no size limit.
+3. No support for transactional table-In SQL, Hive transactions are not supported.
+4. Unsupportive char type-In SparkSQL char type (fixed-length strings) are not supported.
+
+
+Dataframe - https://techvidvan.com/tutorials/apache-spark-sql-dataframe/
+=============
+DataFrames are datasets, which is ideally organized into named columns. We can construct dataframe from an array of different sources, like structured data files, hive tables, external databases, or existing RDDs. DataFrames are equal to a table in a relational database or a dataframe in R/Python with good optimizations.
+
+Features of DataFrame
+=====================
+1. Dataframes are able to process the data in different sizes, like the size of kilobytes to petabytes on a single node cluster to large cluster.
+2. It is a distributed collection of data organized in a named column, it is as similar to a table in RDBMS.
+3. They support different data formats, such as Avro, csv, elastic search, and Cassandra. 
+4. It also provides storage systems like HDFS, HIVE tables, MySQL, etc.
+5. The optimizer called as catalyst optimizer supports optimization. Basically, to represent trees, there are general libraries available.
+6. By analyzing logical plan to solve references.
+7. With logical plan optimization.
+8. By physical planning.
+9. With code generation to compile part of a query to java bytecode.
+10. We can integrate dataframe with all big data tools and frameworks by spark-core.
+11. Dataframe provides several API, such as Python, Java, Scala, and R programming.
+12. It is compatible with a hive. It is possible to run unmodified hive queries on existing hive warehouse.
+
+Limitations of SparkSQL DataFrames
+=======================================
+There are also some limitations of dataframes in Spark SQL, like:
+1. In SQL dataframe, there is no compile-time type safety. Hence, as the structure is unknown, manipulation of data is not possible.
+2. We can convert domain object into dataFrame. But once we do it, then we can not regenerate the domain object.
 
 
 Apache Spark
