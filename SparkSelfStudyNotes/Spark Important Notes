@@ -59,6 +59,29 @@ There are also some limitations of dataframes in Spark SQL, like:
 1. In SQL dataframe, there is no compile-time type safety. Hence, as the structure is unknown, manipulation of data is not possible.
 2. We can convert domain object into dataFrame. But once we do it, then we can not regenerate the domain object.
 
+Spark SQL DataSet - https://techvidvan.com/tutorials/apache-spark-sql-datasets/
+=======================
+It is an interface, provides the advantages of RDDs with the comfort of Spark SQL’s execution engine. It is a distributed collection of data.
+it is a strongly-typed immutable collection of objects, these are mapped to a relational schema. There is a new concept called an encoder, at the core of the datasets API. However, an encoder is responsible for converting between JVM objects and tabular representation.
+The encoder is a primary concept in serialization and deserialization framework
+It is structured as well as lazy query expression which triggers on the action, datasets represent logical plan internally
+
+Datasets inherit all the features of RDD and dataframe, such as:
+================================================================
+RDD’s convenience.
+Dataframe’s performance optimization.
+Scala’s static type-safety.
+
+Features of SQL DataSets
+==========================
+1. Inter-convertible
+2. Persistent Storage
+3. Analysis at compile time
+4. Optimized Query
+5. Single API for Java and Scala
+6. Faster Computation
+7. Less Memory Consumption
+
 
 Apache Spark
 ==================
