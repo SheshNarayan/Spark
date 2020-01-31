@@ -494,6 +494,9 @@ hive> select * from emp_bk1 tablesample(10 percent);
 ===============================================================================================================================
 	Hive - View and Indexes
 ===============================================================================================================================
+
+View
+==================
 Views are generated based on user requirements. You can save any result set data as a view. The usage of view in Hive is same as that of the view in SQL. It is a standard RDBMS concept. We can execute all DML operations on a view.
 
 Creating a View
@@ -526,38 +529,51 @@ The following query drops a view named as emp_30000:
 hive> DROP VIEW emp_30000;
 
 ========================================================
+Index
+==================
+An Index acts as a reference to the records. Instead of searching all the records, we can refer to the index to search for a particular record. Indexes maintain the reference of the records. So that it is easy to search for a record with minimum overhead. Indexes also speed up the searching of data.
+
+When to use Indexing?
+=====================================
+Indexing can be use under the following circumstances:
+* If the dataset is very large.
+* If the query execution is more amount of time than you expected.
+* If a speedy query execution is required.
+* When building a data model.
+Indexes are maintained in a separate table in Hive so that it won’t affect the data inside the table, which contains the data. Another major advantage for indexing in Hive is that indexes can also be partitioned depending on the size of the data we have.
+
+Types of Indexes in Hive
+====================================
+1. Compact Indexing	2. Bitmap Indexing
+Compact Indexing: Compact indexing stores the pair of indexed column’s value and its blockid.
+
+Bitmap indexing: Bitmap indexing stores the combination of indexed column value and list of rows as a bitmap. In other word we can say Bitmap index stores the combination of value and list of rows as a digital image.
+
 Creating an Index
 ==================
 An Index is nothing but a pointer on a particular column of a table. Creating an index means creating a pointer on a particular column of a table. Its syntax is as follows:
-
-CREATE INDEX index_name ON TABLE base_table_name (col_name, ...)
-AS 'index.handler.class.name' [WITH DEFERRED REBUILD] 
+CREATE INDEX index_name ON TABLE base_table_name (col_name, ...) AS 'index.handler.class.name' [WITH DEFERRED REBUILD] 
 [IDXPROPERTIES (property_name=property_value, ...)]
 [IN TABLE index_table_name]
 [PARTITIONED BY (col_name, ...)]
 [
-   [ ROW FORMAT ...] STORED AS ...
-   | STORED BY ...
-]
+      [ ROW FORMAT ...] STORED AS ...   | STORED BY ...
+] 
 [LOCATION hdfs_path]
 [TBLPROPERTIES (...)]
 
 Example: Let us take an example for index. Use the same employee table that we have used earlier with the fields Id, Name, Salary, Designation, and Dept. Create an index named index_salary on the salary column of the employee table.
-
 The following query creates an index:
-hive> CREATE INDEX inedx_salary ON TABLE employee(salary)
-AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler';
-
+hive> CREATE INDEX inedx_salary ON TABLE employee(salary) AS 'org.apache.hadoop.hive.ql.index.compact.CompactIndexHandler';
 It is a pointer to the salary column. If the column is modified, the changes are stored using an index value.
-
-
+ 
 Dropping an Index
 ==================
 The following syntax is used to drop an index:
 DROP INDEX <index_name> ON <table_name>
-
 The following query drops an index named index_salary:
 hive> DROP INDEX index_salary ON employee;
+
 
 ===============================================================================================================================
 FILE FORMATS
